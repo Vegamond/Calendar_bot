@@ -1,0 +1,26 @@
+[
+  {
+    "group_name": "ГРС-15Д",
+    "bot_token": "$BOT_TOKEN_GRS15D",
+    "chat_id": "$CHAT_ID_GRS15D",
+    "ics_url": "$ICS_URL_GRS15D",
+    "schedule_thread_id": null,
+    "main_thread_id": null
+  },
+  {
+    "group_name": "ГРС-15/25Дмб",
+    "bot_token": "$BOT_TOKEN_GRS1525",
+    "chat_id": "$CHAT_ID_GRS1525",
+    "ics_url": "$ICS_URL_GRS1525",
+    "schedule_thread_id": null,
+    "main_thread_id": null
+  },
+  {
+    "group_name": "ГРС-14Дмб",
+    "bot_token": "$BOT_TOKEN_GRS14",
+    "chat_id": "$CHAT_ID_GRS14",
+    "ics_url": "$ICS_URL_GRS14",
+    "schedule_thread_id": null,
+    "main_thread_id": null
+  }
+]

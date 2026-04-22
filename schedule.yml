@@ -1,0 +1,128 @@
+name: Schedule Bot
+
+on:
+  schedule:
+    - cron: "0 6 * * 1-5"   # today    — пн-пт 08:00 Kyiv (UTC+2) = 06:00 UTC
+    - cron: "0 17 * * 0-4"  # tomorrow — нд-чт 19:00 Kyiv = 17:00 UTC
+    - cron: "0 17 * * 0"    # week     — нд    19:00 Kyiv = 17:00 UTC
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "today / tomorrow / week"
+        required: true
+        default: "today"
+      group:
+        description: "Назва групи (порожньо = всі)"
+        required: false
+        default: ""
+      force:
+        description: "Примусово (для week в будній день)"
+        required: false
+        default: "false"
+        type: choice
+        options: ["false", "true"]
+
+permissions:
+  contents: write
+
+# Всі секрети в одному місці — легко додати нову групу
+env:
+  BOT_TOKEN_GRS15D:  ${{ secrets.BOT_TOKEN_GRS15D }}
+  CHAT_ID_GRS15D:    ${{ secrets.CHAT_ID_GRS15D }}
+  ICS_URL_GRS15D:    ${{ secrets.ICS_URL_GRS15D }}
+  BOT_TOKEN_GRS1525: ${{ secrets.BOT_TOKEN_GRS1525 }}
+  CHAT_ID_GRS1525:   ${{ secrets.CHAT_ID_GRS1525 }}
+  ICS_URL_GRS1525:   ${{ secrets.ICS_URL_GRS1525 }}
+  BOT_TOKEN_GRS14:   ${{ secrets.BOT_TOKEN_GRS14 }}
+  CHAT_ID_GRS14:     ${{ secrets.CHAT_ID_GRS14 }}
+  ICS_URL_GRS14:     ${{ secrets.ICS_URL_GRS14 }}
+
+jobs:
+  today:
+    if: github.event.schedule == '0 6 * * 1-5'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - run: python calendar_bot.py today
+      - name: Commit state
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git config user.name "github-actions"
+            git config user.email "github-actions@github.com"
+            git add state.json
+            git commit -m "Update state (today)"
+            git push
+          fi
+
+  tomorrow:
+    if: github.event.schedule == '0 17 * * 0-4'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - run: python calendar_bot.py tomorrow
+      - name: Commit state
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git config user.name "github-actions"
+            git config user.email "github-actions@github.com"
+            git add state.json
+            git commit -m "Update state (tomorrow)"
+            git push
+          fi
+
+  week:
+    if: github.event.schedule == '0 17 * * 0'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - run: python calendar_bot.py week
+      - name: Commit state
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git config user.name "github-actions"
+            git config user.email "github-actions@github.com"
+            git add state.json
+            git commit -m "Update state (week)"
+            git push
+          fi
+
+  manual:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - name: Run manual
+        run: |
+          ARGS="${{ github.event.inputs.mode }}"
+          if [ -n "${{ github.event.inputs.group }}" ]; then
+            ARGS="$ARGS --group ${{ github.event.inputs.group }}"
+          fi
+          if [ "${{ github.event.inputs.force }}" = "true" ]; then
+            ARGS="$ARGS --force"
+          fi
+          python calendar_bot.py $ARGS
+      - name: Commit state
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git config user.name "github-actions"
+            git config user.email "github-actions@github.com"
+            git add state.json
+            git commit -m "Update state (manual: ${{ github.event.inputs.mode }})"
+            git push
+          fi
